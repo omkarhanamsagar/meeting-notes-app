@@ -1,0 +1,52 @@
+appId: com.omkar.meeting-notes
+productName: Meeting Notes
+copyright: Copyright © 2026 ${author}
+
+# Where to look for files relative to the package.json
+directories:
+  output: release
+  buildResources: build
+
+# Files to include in the packaged app
+files:
+  - out/**/*
+  - package.json
+
+# We don't auto-publish anywhere
+publish: null
+
+# --- macOS configuration ---
+mac:
+  # Category in Launchpad / App Store style listings
+  category: public.app-category.productivity
+
+  # Target architecture: arm64 for Apple Silicon. Add 'x64' or use 'universal'
+  # if you ever want Intel Mac support too.
+  target:
+    - target: dir
+      arch:
+        - arm64
+
+  # Don't try to code-sign or notarize — this is a personal-use unsigned build.
+  # If you ever want to distribute, get an Apple Developer cert and set
+  # identity, hardenedRuntime, notarize, etc.
+  identity: null
+  hardenedRuntime: false
+  gatekeeperAssess: false
+
+  # Permission strings shown in macOS prompts the first time the app asks
+  # for these capabilities.
+  extendInfo:
+    NSMicrophoneUsageDescription: Meeting Notes records audio from your microphone to transcribe meetings locally with Whisper.
+    NSCameraUsageDescription: Not used.
+    LSUIElement: false
+
+dmg:
+  title: ${productName}
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications

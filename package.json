@@ -1,0 +1,39 @@
+{
+  "name": "meeting-notes-app",
+  "version": "0.1.0",
+  "description": "Personal meeting notes app — records, transcribes, summarizes",
+  "author": "Omkar Hanamsagar",
+  "main": "out/main/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "package": "npm run build && electron-builder --mac --dir && codesign --force --deep --sign - 'release/mac-arm64/Meeting Notes.app'",
+    "package:dmg": "npm run build && electron-builder --mac dmg && codesign --force --deep --sign - 'release/mac-arm64/Meeting Notes.app'",
+    "install:local": "bash scripts/install-local.sh"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
+    "googleapis": "^173.0.0",
+    "jszip": "^3.10.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.2.0",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}
