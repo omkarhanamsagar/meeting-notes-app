@@ -31,6 +31,7 @@ import {
 } from './projects.js';
 import { listSources, readSourcesForPrompt, type SourceContext } from './sources.js';
 import { DEFAULT_MODEL_ID, isKnownModel } from './models.js';
+import { getAnthropicApiKey } from './settings-store.js';
 import type {
   ChatChunkEvent,
   ChatContentPart,
@@ -501,8 +502,9 @@ export async function sendMessage(
   requestId: string,
   onChunk: (event: ChatChunkEvent) => void,
 ): Promise<SendResult> {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    const err = 'ANTHROPIC_API_KEY env var is not set';
+  const apiKey = getAnthropicApiKey();
+  if (!apiKey) {
+    const err = 'No Claude API key configured. Add one in Settings, or set ANTHROPIC_API_KEY.';
     onChunk({ requestId, kind: 'error', error: err });
     throw new Error(err);
   }
@@ -544,7 +546,7 @@ export async function sendMessage(
   const messages = buildMessagesForApi(ctx, history, userParts);
   const system = buildSystemPrompt(ctx);
 
-  const client = new Anthropic();
+  const client = new Anthropic({ apiKey });
   const stream = client.messages.stream({
     model: modelId,
     max_tokens: MAX_OUTPUT_TOKENS,

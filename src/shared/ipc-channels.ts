@@ -81,6 +81,12 @@ export const IPC = {
   Diagnostics: {
     Doctor: 'diagnostics:doctor',
   },
+  Settings: {
+    /** Read the Claude API key status (source + masked hint) — never the raw key. */
+    GetApiKeyStatus: 'settings:getApiKeyStatus',
+    /** Save the Claude API key (encrypted). Pass an empty string to clear it. */
+    SetApiKey: 'settings:setApiKey',
+  },
   Events: {
     ProcessingUpdate: 'event:processingUpdate',
     /** Main → renderer: open the "Start recording" dialog (e.g. from the tray menu). */

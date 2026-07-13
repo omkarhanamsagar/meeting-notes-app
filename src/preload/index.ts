@@ -8,6 +8,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC } from '../shared/ipc-channels.js';
 import type {
+  ApiKeyStatus,
   AppState,
   AudioDevice,
   CalendarLeadMinutes,
@@ -150,6 +151,13 @@ const api = {
   },
   diagnostics: {
     doctor: (): Promise<DoctorCheck[]> => ipcRenderer.invoke(IPC.Diagnostics.Doctor),
+  },
+  settings: {
+    getApiKeyStatus: (): Promise<ApiKeyStatus> =>
+      ipcRenderer.invoke(IPC.Settings.GetApiKeyStatus),
+    /** Save the Claude API key (encrypted in the main process). Empty clears it. */
+    setApiKey: (key: string): Promise<ApiKeyStatus> =>
+      ipcRenderer.invoke(IPC.Settings.SetApiKey, key),
   },
   calendar: {
     status: (): Promise<CalendarStatus> => ipcRenderer.invoke(IPC.Calendar.Status),

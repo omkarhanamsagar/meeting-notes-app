@@ -11,6 +11,7 @@ import type {
   TextBlockParam,
 } from '@anthropic-ai/sdk/resources/messages';
 import { ANTHROPIC_MODEL } from './config.js';
+import { getAnthropicApiKey } from './settings-store.js';
 import type { SourceContext } from './sources.js';
 
 const SECTION_MEETING = '=== MEETING SUMMARY ===';
@@ -301,14 +302,15 @@ function splitSections(text: string): SummaryResult {
  * (callers should treat null as "keep existing title").
  */
 export async function generateTitle(summary: string, transcript: string): Promise<string | null> {
-  if (!process.env.ANTHROPIC_API_KEY) return null;
+  const apiKey = getAnthropicApiKey();
+  if (!apiKey) return null;
 
   // Prefer the summary as input — it's already distilled. Fall back to the
   // first chunk of transcript if no summary was produced.
   const source = summary.trim() || transcript.slice(0, 4000);
   if (!source.trim()) return null;
 
-  const client = new Anthropic();
+  const client = new Anthropic({ apiKey });
   const response = await client.messages.create({
     model: ANTHROPIC_MODEL,
     max_tokens: 60,
@@ -341,11 +343,12 @@ export async function generateTitle(summary: string, transcript: string): Promis
 }
 
 export async function summarize(args: SummarizeArgs): Promise<SummaryResult> {
-  if (!process.env.ANTHROPIC_API_KEY) {
-    throw new Error('ANTHROPIC_API_KEY env var is not set');
+  const apiKey = getAnthropicApiKey();
+  if (!apiKey) {
+    throw new Error('No Claude API key configured. Add one in Settings, or set ANTHROPIC_API_KEY.');
   }
 
-  const client = new Anthropic();
+  const client = new Anthropic({ apiKey });
   const content = buildContent(args);
   const hasScreenshots = (args.screenshots ?? []).length > 0;
   const system = hasScreenshots

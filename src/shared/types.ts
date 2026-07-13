@@ -143,6 +143,16 @@ export interface DoctorCheck {
   detail: string;
 }
 
+/** Where the resolved Claude (Anthropic) API key comes from. An
+ *  `ANTHROPIC_API_KEY` env var always wins over the key saved in Settings. */
+export type ApiKeySource = 'env' | 'stored' | 'none';
+
+export interface ApiKeyStatus {
+  source: ApiKeySource;
+  /** Masked preview of the active key (e.g. `sk-ant-a…1b2c`), or null if unset. */
+  hint: string | null;
+}
+
 /** One whisper-cli segment with millisecond-precise bounds. */
 export interface TranscriptSegment {
   startMs: number;

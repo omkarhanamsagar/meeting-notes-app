@@ -34,6 +34,7 @@ import JSZip from 'jszip';
 import Anthropic from '@anthropic-ai/sdk';
 import type { TextBlockParam } from '@anthropic-ai/sdk/resources/messages';
 import { ANTHROPIC_MODEL } from './config.js';
+import { getAnthropicApiKey } from './settings-store.js';
 import { projectDir } from './storage.js';
 import {
   priorMeetingSummaries,
@@ -446,8 +447,9 @@ async function generateMeetingBriefing(input: MeetingBriefingInput): Promise<str
  *  AI synthesis step had trouble. */
 async function runBriefingPrompt(userPrompt: string, fallback: string): Promise<string> {
   try {
-    if (!process.env.ANTHROPIC_API_KEY) return fallback;
-    const client = new Anthropic();
+    const apiKey = getAnthropicApiKey();
+    if (!apiKey) return fallback;
+    const client = new Anthropic({ apiKey });
     const block: TextBlockParam = { type: 'text', text: userPrompt };
     const res = await client.messages.create({
       model: ANTHROPIC_MODEL,

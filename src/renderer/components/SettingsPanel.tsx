@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type {
+  ApiKeyStatus,
   AudioDevice,
   CalendarLeadMinutes,
   CalendarStatus,
@@ -21,13 +22,52 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [clientSecret, setClientSecret] = useState('');
   const [calBusy, setCalBusy] = useState(false);
   const [calError, setCalError] = useState<string | null>(null);
+  const [keyStatus, setKeyStatus] = useState<ApiKeyStatus | null>(null);
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [keyBusy, setKeyBusy] = useState(false);
+  const [keyError, setKeyError] = useState<string | null>(null);
+  const [keySaved, setKeySaved] = useState(false);
 
   useEffect(() => {
     void window.api.diagnostics.doctor().then(setChecks);
     void window.api.audio.listDevices().then(setDevices);
     void window.api.audio.getDevice().then(setCurrentDevice);
     void window.api.calendar.status().then(setCal);
+    void window.api.settings.getApiKeyStatus().then(setKeyStatus);
   }, []);
+
+  async function handleSaveApiKey(): Promise<void> {
+    setKeyBusy(true);
+    setKeyError(null);
+    setKeySaved(false);
+    try {
+      const next = await window.api.settings.setApiKey(apiKeyInput.trim());
+      setKeyStatus(next);
+      setApiKeyInput('');
+      setKeySaved(true);
+      // Refresh the environment checks so the "Claude API key" row flips to ✓.
+      setChecks(await window.api.diagnostics.doctor());
+    } catch (err) {
+      setKeyError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setKeyBusy(false);
+    }
+  }
+
+  async function handleRemoveApiKey(): Promise<void> {
+    setKeyBusy(true);
+    setKeyError(null);
+    setKeySaved(false);
+    try {
+      const next = await window.api.settings.setApiKey('');
+      setKeyStatus(next);
+      setChecks(await window.api.diagnostics.doctor());
+    } catch (err) {
+      setKeyError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setKeyBusy(false);
+    }
+  }
 
   async function handleSaveClient(): Promise<void> {
     setCalBusy(true);
@@ -112,6 +152,99 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
             <span className="doctor-detail">{c.detail}</span>
           </div>
         ))}
+
+        <h3 style={{ marginTop: 32 }}>Claude API key</h3>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+          Summaries and chat use the Claude API — transcription runs locally and needs no key.
+          Everyone uses their own key: create one at{' '}
+          <a
+            href="https://console.anthropic.com/settings/keys"
+            target="_blank"
+            rel="noreferrer"
+            style={{ color: 'var(--accent)' }}
+          >
+            console.anthropic.com
+          </a>
+          . It's encrypted in your macOS Keychain and never leaves this Mac.
+        </div>
+
+        {keyStatus?.source === 'env' && (
+          <div className="doctor-row" style={{ marginBottom: 8 }}>
+            <span className="check doctor-ok">✓</span>
+            <span style={{ fontWeight: 500, minWidth: 180 }}>Using environment variable</span>
+            <span className="doctor-detail">
+              {keyStatus.hint} · from <code>ANTHROPIC_API_KEY</code>. A key saved below is only used
+              if you unset it.
+            </span>
+          </div>
+        )}
+
+        {keyStatus?.source === 'stored' && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              marginBottom: 12,
+              flexWrap: 'wrap',
+            }}
+          >
+            <span className="check doctor-ok">✓</span>
+            <span style={{ fontWeight: 500 }}>Saved</span>
+            <span className="doctor-detail">{keyStatus.hint}</span>
+            <button
+              className="btn btn-ghost"
+              onClick={() => void handleRemoveApiKey()}
+              disabled={keyBusy}
+              style={{ marginLeft: 'auto' }}
+            >
+              Remove
+            </button>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', maxWidth: 520 }}>
+          <input
+            className="input"
+            placeholder={keyStatus?.source === 'stored' ? 'Replace key (sk-ant-…)' : 'sk-ant-…'}
+            value={apiKeyInput}
+            onChange={(e) => setApiKeyInput(e.target.value)}
+            type="password"
+            spellCheck={false}
+            autoCorrect="off"
+            autoCapitalize="off"
+            style={{ flex: 1 }}
+          />
+          <button
+            className="btn btn-primary"
+            onClick={() => void handleSaveApiKey()}
+            disabled={keyBusy || !apiKeyInput.trim()}
+          >
+            {keyBusy ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+
+        {keySaved && (
+          <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 6 }}>
+            Saved. New summaries and chats will use this key.
+          </div>
+        )}
+
+        {keyError && (
+          <div
+            style={{
+              marginTop: 8,
+              padding: 10,
+              borderRadius: 6,
+              background: 'rgba(248, 113, 113, 0.1)',
+              border: '1px solid rgba(248, 113, 113, 0.3)',
+              color: '#fca5a5',
+              fontSize: 13,
+            }}
+          >
+            {keyError}
+          </div>
+        )}
 
         <h3 style={{ marginTop: 32 }}>Audio input</h3>
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8 }}>

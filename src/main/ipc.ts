@@ -45,7 +45,9 @@ import crypto from 'node:crypto';
 import { listAudioDevices } from './audio-devices.js';
 import { checkTranscriptionEnv } from './engine/transcription.js';
 import { ANTHROPIC_MODEL, AUDIO_DEVICE, FFMPEG_BIN } from './engine/config.js';
+import { anthropicApiKeyStatus, setAnthropicApiKey } from './engine/settings-store.js';
 import type {
+  ApiKeyStatus,
   AppState,
   CalendarStatus,
   ChatChunkEvent,
@@ -501,16 +503,33 @@ export function registerIpc(): void {
     });
     const wEnv = checkTranscriptionEnv();
     checks.push({ name: 'whisper-cli + model', ok: wEnv.ok, detail: wEnv.detail });
+    const keyStatus = anthropicApiKeyStatus();
     checks.push({
-      name: 'ANTHROPIC_API_KEY',
-      ok: Boolean(process.env.ANTHROPIC_API_KEY),
-      detail: process.env.ANTHROPIC_API_KEY
-        ? `${process.env.ANTHROPIC_API_KEY.slice(0, 15)}...`
-        : 'not set',
+      name: 'Claude API key',
+      ok: keyStatus.source !== 'none',
+      detail:
+        keyStatus.source === 'none'
+          ? 'not set — add one in Settings below'
+          : `${keyStatus.hint} (${keyStatus.source === 'env' ? 'from ANTHROPIC_API_KEY' : 'saved in Settings'})`,
     });
     checks.push({ name: 'Anthropic model', ok: true, detail: ANTHROPIC_MODEL });
     return checks;
   });
+
+  // -------------------------------------------------------------- Settings
+
+  ipcMain.handle(
+    IPC.Settings.GetApiKeyStatus,
+    async (): Promise<ApiKeyStatus> => anthropicApiKeyStatus(),
+  );
+
+  ipcMain.handle(
+    IPC.Settings.SetApiKey,
+    async (_e, key: string): Promise<ApiKeyStatus> => {
+      setAnthropicApiKey(String(key ?? ''));
+      return anthropicApiKeyStatus();
+    },
+  );
 
   // -------------------------------------------------------------- Events out
 
