@@ -148,6 +148,10 @@ const api = {
   audio: {
     listDevices: (): Promise<AudioDevice[]> => ipcRenderer.invoke(IPC.Audio.ListDevices),
     getDevice: (): Promise<string> => ipcRenderer.invoke(IPC.Audio.GetDevice),
+    /** Persist the chosen device (e.g. ":2"), or null to reset. Returns the
+     *  resolved device now in effect. */
+    setDevice: (device: string | null): Promise<string> =>
+      ipcRenderer.invoke(IPC.Audio.SetDevice, device),
   },
   diagnostics: {
     doctor: (): Promise<DoctorCheck[]> => ipcRenderer.invoke(IPC.Diagnostics.Doctor),

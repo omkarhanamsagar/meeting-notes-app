@@ -106,11 +106,15 @@ The first time you record, macOS will prompt for microphone permission. Allow it
    documents and prior meeting summaries are included as context.
 5. **Export** a project/meeting as a zip bundle (raw materials + an AI briefing).
 
+**Choosing the microphone:** open **Settings → Audio input** and pick a device
+from the dropdown. The change applies on your next recording — no restart needed.
+(You can still set `AUDIO_DEVICE` in your shell as a fallback default; the
+in-app selection takes precedence over it.)
+
 **Recording the other side of a call:** by default the app records your
 **microphone** only. To capture what other participants say, route system audio
 through a virtual device like [BlackHole](https://github.com/ExistentialAudio/BlackHole)
-(or an aggregate device), then set `AUDIO_DEVICE` to that device's index. The
-Settings panel lists available input devices and their indices.
+(or an aggregate device), then select that device in **Settings → Audio input**.
 
 ---
 
@@ -138,7 +142,7 @@ variables (in your shell rc) if your setup differs:
 | `WHISPER_BIN`        | `/opt/homebrew/bin/whisper-cli`                  | Path to the `whisper-cli` binary. |
 | `WHISPER_MODEL`      | `~/.cache/whisper-cpp/ggml-medium.en.bin`        | Path to the Whisper model file. |
 | `FFMPEG_BIN`         | `/opt/homebrew/bin/ffmpeg`                       | Path to the `ffmpeg` binary. |
-| `AUDIO_DEVICE`       | `:1`                                             | ffmpeg avfoundation input device index. |
+| `AUDIO_DEVICE`       | `:1`                                             | Fallback ffmpeg avfoundation input device index. Overridden by the device picked in Settings → Audio input. |
 | `MEETING_NOTES_DATA` | `~/Library/Application Support/meeting-notes-app/data` | Where meeting data is stored. |
 
 **Settings → Environment checks** shows a live ✓/✗ for ffmpeg, whisper-cli + model,

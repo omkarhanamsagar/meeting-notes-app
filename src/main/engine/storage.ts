@@ -22,7 +22,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { appStatePath, dataDir, teamsDir, unfiledDir } from './config.js';
+import { appStatePath, dataDir, defaultAudioDevice, teamsDir, unfiledDir } from './config.js';
 import type {
   AppState,
   AttachmentIndexEntry,
@@ -294,9 +294,17 @@ export function listProjects(teamSlug: string): ProjectMeta[] {
 const DEFAULT_APP_STATE: AppState = {
   lastTeamSlug: null,
   lastProjectSlug: null,
+  audioDevice: null,
   migrationVersion: 0,
   version: 1,
 };
+
+/** The ffmpeg avfoundation device to record with: the user's picked device
+ *  (from Settings), else the AUDIO_DEVICE env var, else ":1". Read at record
+ *  time so changes take effect on the next recording without an app restart. */
+export function resolveAudioDevice(): string {
+  return readAppState().audioDevice ?? defaultAudioDevice();
+}
 
 export function readAppState(): AppState {
   const p = appStatePath();

@@ -12,7 +12,7 @@
 
 import { spawn, type ChildProcessByStdio } from 'node:child_process';
 import type { Readable, Writable } from 'node:stream';
-import { AUDIO_DEVICE, FFMPEG_BIN } from './config.js';
+import { defaultAudioDevice, FFMPEG_BIN } from './config.js';
 
 export interface RecorderOptions {
   outputPath: string;
@@ -30,7 +30,7 @@ export class Recorder {
 
   constructor(opts: RecorderOptions) {
     this.outputPath = opts.outputPath;
-    this.device = opts.device ?? AUDIO_DEVICE;
+    this.device = opts.device ?? defaultAudioDevice();
   }
 
   start(): void {

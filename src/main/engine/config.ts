@@ -56,10 +56,15 @@ export const WHISPER_MODEL =
 
 export const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-4-5';
 
-// ffmpeg avfoundation device index. ":1" is the built-in mic on most Macs;
-// ":0" is often a virtual device (e.g. ZoomAudioDevice). The settings UI will
-// eventually let you pick from the actual device list.
-export const AUDIO_DEVICE = process.env.AUDIO_DEVICE ?? ':1';
+// Fallback ffmpeg avfoundation input device. ":1" is the built-in mic on most
+// Macs; ":0" is often a virtual device (e.g. ZoomAudioDevice). This is only the
+// default when the user hasn't picked a device in Settings — the picked device
+// (persisted in app-state) takes precedence. Resolved lazily so an AUDIO_DEVICE
+// env var works even though it's imported into the process after startup (see
+// inheritShellEnv in index.ts).
+export function defaultAudioDevice(): string {
+  return process.env.AUDIO_DEVICE ?? ':1';
+}
 
 // Optional explicit binary paths (useful if PATH isn't picked up from the
 // user's shell rc when the app is launched via Finder).

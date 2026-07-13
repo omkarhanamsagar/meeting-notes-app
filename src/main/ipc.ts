@@ -20,6 +20,7 @@ import {
   readMeta,
   readTeamMeta,
   renameMeeting,
+  resolveAudioDevice,
   writeAppState,
 } from './engine/storage.js';
 import { createProject, createTeam, projectStats, teamStats } from './engine/projects.js';
@@ -44,7 +45,7 @@ import { orchestrator } from './engine/orchestrator.js';
 import crypto from 'node:crypto';
 import { listAudioDevices } from './audio-devices.js';
 import { checkTranscriptionEnv } from './engine/transcription.js';
-import { ANTHROPIC_MODEL, AUDIO_DEVICE, FFMPEG_BIN } from './engine/config.js';
+import { ANTHROPIC_MODEL, FFMPEG_BIN } from './engine/config.js';
 import { anthropicApiKeyStatus, setAnthropicApiKey } from './engine/settings-store.js';
 import type {
   ApiKeyStatus,
@@ -486,10 +487,14 @@ export function registerIpc(): void {
 
   ipcMain.handle(IPC.Audio.ListDevices, async () => listAudioDevices());
 
-  ipcMain.handle(IPC.Audio.GetDevice, async () => AUDIO_DEVICE);
+  ipcMain.handle(IPC.Audio.GetDevice, async () => resolveAudioDevice());
 
-  ipcMain.handle(IPC.Audio.SetDevice, async () => {
-    // intentionally empty
+  ipcMain.handle(IPC.Audio.SetDevice, async (_e, device: string | null): Promise<string> => {
+    // Persist the chosen avfoundation device (e.g. ":2"), or null to fall back
+    // to the AUDIO_DEVICE env var / default. Takes effect on the next recording.
+    const value = typeof device === 'string' && device.trim() ? device.trim() : null;
+    writeAppState({ audioDevice: value });
+    return resolveAudioDevice();
   });
 
   // -------------------------------------------------------------- Diagnostics

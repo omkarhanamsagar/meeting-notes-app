@@ -84,6 +84,9 @@ export interface AppState {
   lastTeamSlug: string | null;
   /** Last project the user was viewing — used to restore on startup. */
   lastProjectSlug: string | null;
+  /** Chosen ffmpeg avfoundation input device (e.g. ":2"), or null to fall back
+   *  to the AUDIO_DEVICE env var / the ":1" default. Set via Settings. */
+  audioDevice: string | null;
   /** Bumped each time storage migrations run. 0 = pre-teams (projects at the root). */
   migrationVersion: number;
   /** Schema version for future migrations. */

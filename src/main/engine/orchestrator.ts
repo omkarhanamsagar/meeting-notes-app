@@ -28,6 +28,7 @@ import {
   readMeta,
   readProjectMeta,
   renameMeeting,
+  resolveAudioDevice,
   slugify,
   writeAppState,
   writeMeta,
@@ -126,7 +127,7 @@ export class Orchestrator extends EventEmitter {
       fs.writeFileSync(notesPath, '');
     }
 
-    const recorder = new Recorder({ outputPath: recordingPath });
+    const recorder = new Recorder({ outputPath: recordingPath, device: resolveAudioDevice() });
     try {
       recorder.start();
     } catch (err) {

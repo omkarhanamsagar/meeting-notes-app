@@ -27,6 +27,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const [keyBusy, setKeyBusy] = useState(false);
   const [keyError, setKeyError] = useState<string | null>(null);
   const [keySaved, setKeySaved] = useState(false);
+  const [deviceBusy, setDeviceBusy] = useState(false);
 
   useEffect(() => {
     void window.api.diagnostics.doctor().then(setChecks);
@@ -66,6 +67,16 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       setKeyError(err instanceof Error ? err.message : String(err));
     } finally {
       setKeyBusy(false);
+    }
+  }
+
+  async function handleDeviceChange(device: string): Promise<void> {
+    setDeviceBusy(true);
+    try {
+      // Persist the selection; the resolved device is echoed back.
+      setCurrentDevice(await window.api.audio.setDevice(device));
+    } finally {
+      setDeviceBusy(false);
     }
   }
 
@@ -248,27 +259,35 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
         <h3 style={{ marginTop: 32 }}>Audio input</h3>
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8 }}>
-          Currently using ffmpeg avfoundation device <code>{currentDevice || '(default)'}</code>.
-          To switch devices, set the <code>AUDIO_DEVICE</code> env var in <code>~/.zshrc</code> (e.g.{' '}
-          <code>export AUDIO_DEVICE=":1"</code>) and restart the app.
-          {' '}A real picker is coming.
+          Pick the microphone to record from. The change takes effect on your next
+          recording — no restart needed.
         </div>
+        {!devices && <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>Loading…</div>}
         {devices && devices.length === 0 && (
           <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
             No audio devices detected. Check that ffmpeg is installed and macOS has granted microphone permissions.
           </div>
         )}
-        {devices?.map((d) => (
-          <div className="doctor-row" key={d.index}>
-            <span style={{ width: 16, fontFamily: 'var(--mono)' }}>:{d.index}</span>
-            <span>{d.name}</span>
-            {`:${d.index}` === currentDevice && (
-              <span style={{ color: 'var(--accent)', fontSize: 11, marginLeft: 'auto' }}>
-                IN USE
-              </span>
+        {devices && devices.length > 0 && (
+          <select
+            className="input"
+            style={{ width: 'auto', minWidth: 260, padding: '6px 8px' }}
+            value={currentDevice}
+            disabled={deviceBusy}
+            onChange={(e) => void handleDeviceChange(e.target.value)}
+          >
+            {/* If the resolved device isn't in the list (e.g. an env-var index
+                that's since disappeared), still show it so the value is valid. */}
+            {!devices.some((d) => `:${d.index}` === currentDevice) && currentDevice && (
+              <option value={currentDevice}>{currentDevice} (current)</option>
             )}
-          </div>
-        ))}
+            {devices.map((d) => (
+              <option key={d.index} value={`:${d.index}`}>
+                :{d.index} — {d.name}
+              </option>
+            ))}
+          </select>
+        )}
 
         <h3 style={{ marginTop: 32 }}>Google Calendar</h3>
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
